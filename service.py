@@ -9,7 +9,7 @@ class Service(dbus.service.Object):
     """
 
     def __init__(self, bus, index, uuid, primary):
-        self.path = f'/example/service{index}'
+        self.path = f'/databox/service{index}'
         self.bus = bus
         self.uuid = uuid
         self.primary = primary

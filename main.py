@@ -17,7 +17,7 @@ import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib
 
-from service_basic import ExampleService, ExampleAdvertisement
+from service_databox import DataboxService, DataboxAdvertisement
 
 from definitions import *
 
@@ -30,7 +30,7 @@ class Application(dbus.service.Object):
     """
 
     def __init__(self, bus):
-        self.path = '/example/app'
+        self.path = '/databox/app'
         self.services = []
         dbus.service.Object.__init__(self, bus, self.path)
 
@@ -130,9 +130,9 @@ def main():
     )
 
     app = Application(bus)
-    app.add_service(ExampleService(bus, 0))
+    app.add_service(DataboxService(bus, 0))
 
-    advertisement = ExampleAdvertisement(bus, 0)
+    advertisement = DataboxAdvertisement(bus, 0)
 
     MAIN_LOOP = GLib.MainLoop()
 

@@ -163,7 +163,7 @@ class Advertisement(dbus.service.Object):
     org.bluez.LEAdvertisement1 implementation
     """
 
-    PATH_BASE = '/example/advertisement'
+    PATH_BASE = '/databox/advertisement'
 
     def __init__(self, bus, index, advertising_type='peripheral'):
         self.path = self.PATH_BASE + str(index)
