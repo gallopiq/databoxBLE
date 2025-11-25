@@ -2,7 +2,7 @@
 
 set -e
 
-IP=192.168.0.101
+IP=192.168.0.100
 ssh $IP -t "mkdir -p ~/ble"
 scp *.py $IP:~/ble
 scp enable_advert.sh $IP:~/ble
