@@ -24,8 +24,6 @@ check_state() {
     out="$(bluetoothctl show)"
     echo "$out" | grep -q "Powered: yes"      || { echo "not Powered: yes"; return 1; }
     echo "$out" | grep -q "Discoverable: yes" || { echo "not Discoverable: yes"; return 1; }
-    echo "$out" | grep -q "UUID: Vendor specific           (e68de724-46d7-49eb-8635-0f6762da8957)" \
-        || { echo "Vendor UUID missing"; return 1; }
     echo "Bluetooth state OK"
 }
 
