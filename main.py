@@ -12,10 +12,12 @@
 #   - Responds to Read/Write requests over BLE
 #
 
+import time
 import dbus
 import dbus.mainloop.glib
 import dbus.service
 from gi.repository import GLib
+
 
 from service_databox import DataboxService, DataboxAdvertisement
 
@@ -142,7 +144,7 @@ def main():
         reply_handler=make_register_app_cb(app),
         error_handler=register_app_error_cb
     )
-
+    time.sleep(0.1)
     print("Registering advertisement...")
     advertising_manager.RegisterAdvertisement(
         advertisement.get_path(), {},
