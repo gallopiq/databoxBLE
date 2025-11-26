@@ -4,6 +4,7 @@ import struct
 import threading
 
 
+
 def decode_header(raw):        
         
         (
@@ -73,11 +74,14 @@ class ShmRead:
     SHM_SIZE = 1024
     ShmHeader = struct.Struct("<qqqqqqBIBhhB")
     ShmDevice = struct.Struct("<I??hhhhhhIhhb")
+    
     def __init__(self):
         self.path = f"/dev/shm/{self.SHM_ADDRESS}"
         self._lock = threading.Lock()
         self.databox = {}
         self.sensors = []
+        self.packet = b"42"
+        self.serial = 42
 
         self.fd = os.open(self.path, os.O_RDONLY)
 
@@ -91,24 +95,54 @@ class ShmRead:
         """Return first n bytes of the shared memory."""
         return self.mm[:n]
 
+    def encode_ble(self):
+        body = bytearray()
+        body += struct.pack('<I', self.serial)
+        body += struct.pack('<q', self.databox['measure_start'][0])
+        body += struct.pack('<q', self.databox['measure_start'][1])
+        body += struct.pack('<B', self.databox['num_devices'])
+        body += struct.pack('<B', 0)
+        body += struct.pack('<B', self.databox['diskspace_percent'])
+        body += struct.pack('<h', self.databox['usb_mV'])
+        body += struct.pack('<h', self.databox['bat_mv'])
+        body += struct.pack('<B', self.databox['bat_percent'])
+
+        for i in range(self.databox['num_devices']):
+            body += struct.pack('<I', self.sensors[i]['serial'])
+            body += struct.pack('<?', self.sensors[i]['online'])
+            body += struct.pack('<?', self.sensors[i]['measurement'])
+            body += struct.pack('<h', self.sensors[i]['bat_mV'])
+            body += struct.pack('<h', self.sensors[i]['usb_mV'])
+            body += struct.pack('<b', self.sensors[i]['rssi'])
+            body += struct.pack('<I', self.sensors[i]['n_missing_pkgs'])
+
+        size = len(body) + 2          # include the uint16 itself
+        packet = struct.pack('<H', size) + body
+        return packet
+
+
     def update_data(self):
         """Decode header + devices and update cached dicts atomically."""
-        raw = self.get_bytes()
+        self.raw = self.get_bytes()
 
-        databox = decode_header(raw)
+        databox = decode_header(self.raw)
         sensors = [
-            decode_device_data(raw, i)
+            decode_device_data(self.raw, i)
             for i in range(databox["num_devices"])
         ]
 
         with self._lock:
             self.databox = databox
             self.sensors = sensors
+            self.packet = self.encode_ble()
 
     def get_state(self):
         """Return a snapshot of (databox, sensors) safely."""
         with self._lock:
             return dict(self.databox), list(self.sensors)
+        
+    def get_packet(self):
+        return self.packet
 
     def close(self):
         self.mm.close()

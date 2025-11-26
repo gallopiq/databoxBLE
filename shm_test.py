@@ -7,4 +7,5 @@ shm = ShmRead()
 while(True):
     shm.update_data()
     print(shm.get_state())
+    print(shm.get_packet())
     time.sleep(1)

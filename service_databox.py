@@ -4,6 +4,8 @@ from characteristic import Characteristic, NotifyCharacteristic, Advertisement
 
 from service import Service
 
+from shm_read import ShmRead
+
 class DataboxCharacteristic(Characteristic):
     """
     Simple read/write characteristic
@@ -12,20 +14,23 @@ class DataboxCharacteristic(Characteristic):
     def __init__(self, bus, index, uuid, service):
         Characteristic.__init__(self, bus, index, uuid,
                                 ['read', 'write'], service)
-        self.value = b"Hello BLE"
+        self.shm = ShmRead()
+        
 
     @dbus.service.method(GATT_CHRC_IFACE,
                          in_signature='a{sv}',
                          out_signature='ay')
     def ReadValue(self, options):
-        print("DataboxCharacteristic ReadValue")
-        return dbus.ByteArray(self.value)
+        print("read triggered")
+        self.shm.update_data()
+        print(self.shm.get_state())
+        return dbus.ByteArray(self.shm.get_packet())
 
     @dbus.service.method(GATT_CHRC_IFACE,
                          in_signature='aya{sv}')
     def WriteValue(self, value, options):
-        print(f"DataboxCharacteristic WriteValue: {bytes(value)}")
-        self.value = bytes(value)
+        print(f"DataboxCharacteristic WriteValue: {value}")
+        self.value = bytes(f"DataboxCharacteristic WriteValue: {value}")
 
         
 class DataboxNotificationChar(NotifyCharacteristic):
