@@ -101,7 +101,6 @@ class ShmRead:
         body += struct.pack('<q', self.databox['measure_start'][0])
         body += struct.pack('<q', self.databox['measure_start'][1])
         body += struct.pack('<B', self.databox['num_devices'])
-        body += struct.pack('<B', 0)
         body += struct.pack('<B', self.databox['diskspace_percent'])
         body += struct.pack('<h', self.databox['usb_mV'])
         body += struct.pack('<h', self.databox['bat_mv'])
