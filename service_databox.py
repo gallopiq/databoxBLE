@@ -75,9 +75,9 @@ class DataboxService(Service):
         )
 
         # characteristic used by startNotifications(..., charlongUUID, ...)
-        self.add_characteristic(
-            DataboxNotificationChar(bus, 1, self.DATABOX_NOTIFY_CHRC_UUID, self)
-        )
+        # self.add_characteristic(
+        #     DataboxNotificationChar(bus, 1, self.DATABOX_NOTIFY_CHRC_UUID, self)
+        # )
         
 
 class DataboxAdvertisement(Advertisement):
@@ -85,8 +85,10 @@ class DataboxAdvertisement(Advertisement):
     Advertises the custom ExampleService UUID so scanners can discover it.
     """
 
-    def __init__(self, bus, index=0, local_name="DataboxGATT"):
+    def __init__(self, bus, index=0):
         super().__init__(bus, index, advertising_type='peripheral')
         self.add_service_uuid(DataboxService.DATABOX_SVC_UUID)
         self.include_tx_power = True
-        self.local_name = local_name
+        self.local_name = "CalvaraDev"
+        with open("/etc/gallopiq/databox_sn", "r") as file:
+            self.local_name = f"Calvara{file.read()}"

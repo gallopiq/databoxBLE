@@ -81,7 +81,7 @@ class ShmRead:
         self.databox = {}
         self.sensors = []
         self.packet = b"42"
-        self.serial = 42
+        self.serial = self.get_databox_serial()
 
         self.fd = os.open(self.path, os.O_RDONLY)
 
@@ -94,29 +94,48 @@ class ShmRead:
     def get_bytes(self, n=SHM_SIZE):
         """Return first n bytes of the shared memory."""
         return self.mm[:n]
+    
+    def check_online_backend(self):        
+        with open("/tmp/online.status", 'r') as f:
+            state= f.read()        
+            return state.startswith("Online")
+        return False
+
+    def get_databox_serial(self):        
+        with open("/etc/gallopiq/databox_sn", 'r') as f:
+            state = int(f.read())
+            return state 
+        return 0
+
+
+
+
 
     def encode_ble(self):
+        print("1 encode")
         body = bytearray()
         body += struct.pack('<I', self.serial)
         body += struct.pack('<q', self.databox['measure_start'][0])
         body += struct.pack('<q', self.databox['measure_start'][1])
         body += struct.pack('<B', self.databox['num_devices'])
         body += struct.pack('<B', self.databox['diskspace_percent'])
-        body += struct.pack('<h', self.databox['usb_mV'])
-        body += struct.pack('<h', self.databox['bat_mv'])
+        body += struct.pack('<?', self.databox['usb_mV']>4300)        
         body += struct.pack('<B', self.databox['bat_percent'])
+        body += struct.pack('<B', self.databox['online'])
 
         for i in range(self.databox['num_devices']):
             body += struct.pack('<I', self.sensors[i]['serial'])
             body += struct.pack('<?', self.sensors[i]['online'])
             body += struct.pack('<?', self.sensors[i]['measurement'])
-            body += struct.pack('<h', self.sensors[i]['bat_mV'])
-            body += struct.pack('<h', self.sensors[i]['usb_mV'])
+            body += struct.pack('<B', int(self.sensors[i]['bat_mV']/100))
+            body += struct.pack('<?', self.sensors[i]['usb_mV']>4300)
             body += struct.pack('<b', self.sensors[i]['rssi'])
             body += struct.pack('<I', self.sensors[i]['n_missing_pkgs'])
 
+        print("2 encode")
         size = len(body) + 2          # include the uint16 itself
         packet = struct.pack('<H', size) + body
+        print("3 encode")
         return packet
 
 
@@ -125,6 +144,7 @@ class ShmRead:
         self.raw = self.get_bytes()
 
         databox = decode_header(self.raw)
+        databox['online'] = self.check_online_backend()
         sensors = [
             decode_device_data(self.raw, i)
             for i in range(databox["num_devices"])
