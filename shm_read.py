@@ -2,7 +2,7 @@ import os
 import mmap
 import struct
 import threading
-
+import msgpack
 
 
 def decode_header(raw):        
@@ -112,32 +112,36 @@ class ShmRead:
 
 
     def encode_ble(self):
-        print("1 encode")
-        body = bytearray()
-        body += struct.pack('<I', self.serial)
-        body += struct.pack('<q', self.databox['measure_start'][0])
-        body += struct.pack('<q', self.databox['measure_start'][1])
-        body += struct.pack('<B', self.databox['num_devices'])
-        body += struct.pack('<B', self.databox['diskspace_percent'])
-        body += struct.pack('<?', self.databox['usb_mV']>4300)        
-        body += struct.pack('<B', self.databox['bat_percent'])
-        body += struct.pack('<B', self.databox['online'])
-
+        # Prepare sensors list in msgpack-friendly structure
+        sensors = []
         for i in range(self.databox['num_devices']):
-            body += struct.pack('<I', self.sensors[i]['serial'])
-            body += struct.pack('<?', self.sensors[i]['online'])
-            body += struct.pack('<?', self.sensors[i]['measurement'])
-            body += struct.pack('<B', int(self.sensors[i]['bat_mV']/100))
-            body += struct.pack('<?', self.sensors[i]['usb_mV']>4300)
-            body += struct.pack('<b', self.sensors[i]['rssi'])
-            body += struct.pack('<I', self.sensors[i]['n_missing_pkgs'])
+            s = self.sensors[i]
+            sensors.append({
+                "serial": s['serial'],
+                "online": bool(s['online']),
+                "measurement": bool(s['measurement']),
+                "bat_10mV": int(s['bat_mV'] / 100),      # same conversion as before
+                "usb_connected": s['usb_mV'] > 4300,
+                "rssi": s['rssi'],
+                "missing_pkgs": s['n_missing_pkgs'],
+            })
 
-        print("2 encode")
-        size = len(body) + 2          # include the uint16 itself
-        packet = struct.pack('<H', size) + body
-        print("3 encode")
+        # Prepare top-level packet structure
+        packet_dict = {
+            "serial": self.serial,
+            "measure_start": list(self.databox['measure_start']),
+            "num_devices": self.databox['num_devices'],
+            "diskspace_percent": self.databox['diskspace_percent'],
+            "usb_connected": self.databox['usb_mV'] > 4300,
+            "bat_percent": self.databox['bat_percent'],
+            "online": self.databox['online'],
+            "sensors": sensors,
+        }
+
+        # Encode using msgpack
+        packet = msgpack.packb(packet_dict, use_bin_type=True)
+
         return packet
-
 
     def update_data(self):
         """Decode header + devices and update cached dicts atomically."""
