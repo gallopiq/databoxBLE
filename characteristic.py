@@ -108,6 +108,7 @@ class NotifyCharacteristic(Characteristic):
         self.value = b"Initial notification"
         self.notifying = False
         self._notify_source_id = None
+        self.interval_ms=1000
 
     def _notify(self):
         """
@@ -124,6 +125,10 @@ class NotifyCharacteristic(Characteristic):
         )
         return True  # keep the timeout running
 
+    def set_interval(self,interval_ms):
+        self.interval_ms=interval_ms
+
+
     @dbus.service.method(GATT_CHRC_IFACE)
     def StartNotify(self):
         if self.notifying:
@@ -135,7 +140,7 @@ class NotifyCharacteristic(Characteristic):
         # send one immediately
         self._notify()
         # and then every second
-        self._notify_source_id = GLib.timeout_add(1000, self._notify)
+        self._notify_source_id = GLib.timeout_add(self.interval_ms, self._notify)
 
     @dbus.service.method(GATT_CHRC_IFACE)
     def StopNotify(self):

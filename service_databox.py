@@ -11,11 +11,12 @@ class DataboxCharacteristic(Characteristic):
     Simple read/write characteristic
     """
 
-    def __init__(self, bus, index, uuid, service):
+    def __init__(self, bus, index, uuid, service, notifier):
         Characteristic.__init__(self, bus, index, uuid,
                                 ['read', 'write'], service)
         self.shm = ShmRead()
-        
+        self.notifier=notifier
+        self.notifier.set_interval(40)
 
     @dbus.service.method(GATT_CHRC_IFACE,
                          in_signature='a{sv}',
@@ -24,6 +25,9 @@ class DataboxCharacteristic(Characteristic):
         print("read triggered")
         self.shm.update_data()
         print(self.shm.get_state())
+        if not self.notifier.notifying:        
+            self.notifier.StartNotify()
+        
         return dbus.ByteArray(self.shm.get_packet())
 
     @dbus.service.method(GATT_CHRC_IFACE,
@@ -52,6 +56,9 @@ class DataboxNotificationChar(NotifyCharacteristic):
             []
         )
         self.value=self.value+1
+        if(self.value>5):
+            self.StopNotify()
+            self.value=0
         return True  # keep the timeout running
 
 
@@ -68,16 +75,15 @@ class DataboxService(Service):
 
     def __init__(self, bus, index):
         Service.__init__(self, bus, index, self.DATABOX_SVC_UUID, True)
-
+        notifier =  DataboxNotificationChar(bus, 1, self.DATABOX_NOTIFY_CHRC_UUID, self)
         # characteristic used by read_char() in your app
+        self.add_characteristic(notifier)
+
+
         self.add_characteristic(
-            DataboxCharacteristic(bus, 0, self.DATABOX_CHRC_UUID, self)
+            DataboxCharacteristic(bus, 0, self.DATABOX_CHRC_UUID, self,notifier)
         )
 
-        # characteristic used by startNotifications(..., charlongUUID, ...)
-        # self.add_characteristic(
-        #     DataboxNotificationChar(bus, 1, self.DATABOX_NOTIFY_CHRC_UUID, self)
-        # )
         
 
 class DataboxAdvertisement(Advertisement):
