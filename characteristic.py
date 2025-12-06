@@ -10,8 +10,8 @@ class Characteristic(dbus.service.Object):
     org.bluez.GattCharacteristic1 implementation
     """
 
-    def __init__(self, bus, index, uuid, flags, service):
-        self.path = service.get_path() + f'/char{index}'
+    def __init__(self, bus, path, uuid, flags, service):
+        self.path = service.get_path() + f'/{path}'
         self.bus = bus
         self.uuid = uuid
         self.flags = flags
@@ -104,7 +104,7 @@ class NotifyCharacteristic(Characteristic):
     def __init__(self, bus, index, uuid, service):
         # supports read + notify
         Characteristic.__init__(self, bus, index, uuid,
-                                ['read', 'notify'], service)
+                                ['write', 'notify'], service)
         self.value = b"Initial notification"
         self.notifying = False
         self._notify_source_id = None
@@ -134,7 +134,7 @@ class NotifyCharacteristic(Characteristic):
         if self.notifying:
             return
 
-        print("NotifyCharacteristic StartNotify")
+        # print("NotifyCharacteristic StartNotify")
         self.notifying = True
 
         # send one immediately
@@ -147,7 +147,7 @@ class NotifyCharacteristic(Characteristic):
         if not self.notifying:
             return
 
-        print("NotifyCharacteristic StopNotify")
+        # print("NotifyCharacteristic StopNotify")
         self.notifying = False
 
         if self._notify_source_id is not None:
@@ -158,10 +158,14 @@ class NotifyCharacteristic(Characteristic):
                          in_signature='a{sv}',
                          out_signature='ay')
     def ReadValue(self, options):
-        print("NotifyCharacteristic ReadValue")
+        # print("NotifyCharacteristic ReadValue")
         return dbus.ByteArray(self.value)
 
-
+    @dbus.service.method(GATT_CHRC_IFACE,
+                         in_signature='aya{sv}')
+    def WriteValue(self, value, options):
+        # print("Default WriteValue called")
+        raise NotSupportedException()
 
 class Advertisement(dbus.service.Object):
     """
