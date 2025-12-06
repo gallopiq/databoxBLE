@@ -138,18 +138,22 @@ def main():
 
     MAIN_LOOP = GLib.MainLoop()
 
+    print("Registering advertisement FIRST...")
+    advertising_manager.RegisterAdvertisement(
+        advertisement.get_path(),
+        {},
+        reply_handler=register_ad_cb,
+        error_handler=register_ad_error_cb
+    )
+
+    # Critical: allow BlueZ to fully activate advertising
+    time.sleep(0.3)
+
     print("Registering GATT application...")
     service_manager.RegisterApplication(
         app.get_path(), {},
         reply_handler=make_register_app_cb(app),
         error_handler=register_app_error_cb
-    )
-    time.sleep(0.1)
-    print("Registering advertisement...")
-    advertising_manager.RegisterAdvertisement(
-        advertisement.get_path(), {},
-        reply_handler=register_ad_cb,
-        error_handler=register_ad_error_cb
     )
 
     try:

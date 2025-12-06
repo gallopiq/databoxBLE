@@ -191,6 +191,8 @@ class Advertisement(dbus.service.Object):
             'ManufacturerData': dbus.Dictionary(self.manufacturer_data, signature='qv'),
             'ServiceData': dbus.Dictionary(self.service_data, signature='sv'),
             'IncludeTxPower': self.include_tx_power,
+            'MinInterval': dbus.UInt32(0x00100),
+            'MaxInterval': dbus.UInt32(0x00200),
         }
 
         if self.local_name:
