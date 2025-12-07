@@ -29,7 +29,7 @@ check_state() {
 
 
 main() {
-    for i in 1 2 3; do
+    for i in 1 2 3 4 5 6 7 8 9 10; do
         echo "main attempt $i"
         power_off
         sleep 0.1
@@ -40,9 +40,9 @@ main() {
             return 0
         fi
         echo "main: retry $i"
-        sleep 0.5
+        sleep 1.0
     done
-    echo "main: failed after 3 attempts"
+    echo "main: failed after 10 attempts"
     return 1
 }
 

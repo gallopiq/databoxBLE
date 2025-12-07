@@ -120,7 +120,7 @@ class ShmRead:
                 "serial": s['serial'],
                 "online": bool(s['online']),
                 "measurement": bool(s['measurement']),
-                "bat_10mV": int(s['bat_mV'] / 100),      # same conversion as before
+                "bat_mV": int(s['bat_mV']),      # same conversion as before
                 "usb_connected": s['usb_mV'] > 4300,
                 "rssi": s['rssi'],
                 "missing_pkgs": s['n_missing_pkgs'],
@@ -133,7 +133,7 @@ class ShmRead:
             "num_devices": self.databox['num_devices'],
             "diskspace_percent": self.databox['diskspace_percent'],
             "usb_connected": self.databox['usb_mV'] > 4300,
-            "bat_percent": self.databox['bat_percent'],
+            "bat_mv": self.databox['bat_mv'],
             "online": self.databox['online'],
             "sensors": sensors,
         }

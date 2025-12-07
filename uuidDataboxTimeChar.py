@@ -33,6 +33,9 @@ class DataboxTimeCharacteristic(Characteristic):
         incoming = struct.unpack("<Q", bytes(value))[0]
         now = int(time.time())
         diff = incoming - now
+        
+
+        
         if abs(diff) <= self.TIME_THRESHOLD:
             print(f"[Time] Time not updated (|diff| <= {self.TIME_THRESHOLD}s).")
             return
@@ -41,6 +44,9 @@ class DataboxTimeCharacteristic(Characteristic):
             # `date -s @<timestamp>`
             subprocess.run(["sudo", "date", "-s", f"@{incoming}"], check=True)
             print("System time updated.")
+            print(f"[Time] Old system time: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(now))}")
+            print(f"[Time]   New timestamp: {time.strftime('%Y-%m-%d %H:%M:%S', time.localtime(incoming))}")
+
         except Exception as e:
             print(f"Failed to set system time: {e}")
             return

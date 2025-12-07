@@ -10,7 +10,7 @@ from characteristic import NotifyCharacteristic
 from definitions import *
 
 
-class DataboxNotificationChar(NotifyCharacteristic):
+class DataboxStateCharacteristic(NotifyCharacteristic):
     def __init__(self, bus, index, uuid, service):
         super().__init__(bus, index, uuid, service)
         self.shm = ShmRead()
